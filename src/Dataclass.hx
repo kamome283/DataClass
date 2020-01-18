@@ -35,4 +35,17 @@ class Dataclass {
         fields.push(field);
         return fields;
     }
+
+    static public macro function makePublic(): Array<Field> {
+        var fields = Context.getBuildFields();      
+        for (field in fields) {
+            switch (field.kind) {
+                case FVar(_):
+                    field.access.remove(Access.APrivate);
+                    field.access.push(Access.APublic);
+                default:
+            }
+        }
+        return fields;
+    }
 }
