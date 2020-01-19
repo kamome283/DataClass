@@ -48,4 +48,31 @@ class Dataclass {
         }
         return fields;
     }
+
+    static public macro function copy(): Array<Field> {
+        final classType = Context.getClassPath();
+        var fields = Context.getBuildFields();
+        var args: Array<FunctionArg> = [];
+        var types: Array<ComplexType> = [];
+        var exprs: Array<Expr> = [];
+        for (field in fields) {
+            switch (field.kind) {
+                case FVar(t, e):
+                    final name = field.name;
+                    final type: ComplexType = TNamed(name, t);
+                    types.push(type);
+                    final expr = macro fields.$name == null ? this.$name : fields.$name;
+                    exprs.push(expr);
+                default:
+            }
+        }
+        final type = TOptional(TIntersection(types));
+        final arg: FunctionArg = {name: "fields", type: type};
+        final func: Function = {
+            args: [arg],
+            ret: null, // return Self
+            expr: macro return new $classType(${exprs[0]}, ${exprs[1]})
+        };
+        return fields;
+    }
 }
