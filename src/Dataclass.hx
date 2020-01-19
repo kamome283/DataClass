@@ -2,7 +2,7 @@ import haxe.macro.Expr;
 import haxe.macro.Context;
 
 class Dataclass {
-	static public macro function constructor():Array<Field> {
+	public static macro function constructor():Array<Field> {
 		var fields = Context.getBuildFields();
 		var args:Array<FunctionArg> = [];
 		var exprs:Array<Expr> = [];
@@ -36,7 +36,7 @@ class Dataclass {
 		return fields;
 	}
 
-	static public macro function makePublic():Array<Field> {
+	public static macro function makePublic():Array<Field> {
 		var fields = Context.getBuildFields();
 		for (field in fields) {
 			switch (field.kind) {
@@ -49,7 +49,7 @@ class Dataclass {
 		return fields;
 	}
 
-	static public macro function copy():Array<Field> {
+	public static macro function copy():Array<Field> {
 		var classFields = Context.getBuildFields();
 
 		var types:Array<ComplexType> = [];
