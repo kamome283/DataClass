@@ -17,4 +17,15 @@ class Person {
     public var title(get, never): String;
     inline private function get_title()
         return '${name}(${age})';
+
+    public function copy(?fields: {?name: String, ?age: Int}): Person {
+        if (fields == null) {
+            return copy({});
+        }
+
+        return new Person(
+            fields.name == null ? name : fields.name,
+            fields.age == null ? age : fields.age
+        );
+    }
 }
