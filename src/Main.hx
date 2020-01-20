@@ -1,28 +1,49 @@
-using Dataclass;
-
 class Main {
-    static public function main() {
-        final p1 = Person.init("Tsubasa", 24);
+	static public function main() {
+		// Generates *private* constructor which takes and initializes all class variables.
+		// final yui = new Idol("Yui", 17, Passion);
 
-        final p2 = p1.copy({name: "Kana"});
-        trace(p2.title);
+		// The constructor is private, thus you are required to use "init" method.
+		// If you do not implement "init" method, the method is automatically generated, which calls the constructor.
+		final yui = Idol.init("Yui", 17, Passion);
+		trace(yui.name);
 
-        final p3 = p1.copy({});
-        trace(p1.equals(p3));
-        trace(p1.equals(p2));
-    }
+		// Generates "copy" method which takes class variables for change as an anonymous structure.
+		// This method constructs a new object with given variables and original variables for not given variables.
+		final nao = yui.copy({name: "Nao", type: Cool});
+		trace(nao.name);
+
+		// Generates "equals" method which compares structually.
+		// Remember that this method just compares all variables with `this.$var == rhs.$var`.
+		// Thus if class variables are compared by the reference, this method does not work well.
+		final yui_ = yui.copy({});
+		trace(yui.equals(yui_));
+
+		// You can unapply the object and use pattern match.
+		// This is *default* behavior, not by my macro, but I think this behavior is worth to mention here.
+		final s = switch (yui) {
+			case {name: "Yui", age: 18}: "Yui(18)";
+			case {name: "Yui"}: "Yui(_)"; // Matches this
+			default: "_";
+		};
+		trace(s);
+	}
 }
 
-
+// All class variables become public automatically.
 @:build(Dataclass.constructor())
 @:build(Dataclass.makePublic())
 @:build(Dataclass.copy())
 @:build(Dataclass.equals())
 @:build(Dataclass.init())
-class Person {
-    final name: String;
-    final age: Int;
-    public var title(get, never): String;
-    inline private function get_title()
-        return '${name}(${age})';
+class Idol {
+	final name:String;
+	final age:Int;
+	final type:IdolType;
+}
+
+enum IdolType {
+	Cute;
+	Cool;
+	Passion;
 }
