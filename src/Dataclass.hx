@@ -1,6 +1,8 @@
 import haxe.macro.Expr;
 import haxe.macro.Context;
 
+using Lambda;
+
 class Dataclass {
 	public static macro function constructor():Array<Field> {
 		var fields = Context.getBuildFields();
@@ -107,5 +109,37 @@ class Dataclass {
 
 		classFields.push(field);
 		return classFields;
+	}
+
+	public static macro function equals():Array<Field> {
+		var classFields = Context.getBuildFields();
+
+		final comparison:Expr = {
+			var comparisons:Array<Expr> = [];
+			for (f in classFields) {
+				switch (f.kind) {
+					case FVar(t, e):
+						final name = f.name;
+						comparisons.push(macro this.$name == rhs.$name);
+					default:
+				}
+			}
+			final lastComp = comparisons.pop();
+
+			comparisons.fold((comp, acc) -> macro $acc && $comp, lastComp);
+		}
+
+		final classType:ComplexType = TPath({
+			name: Context.getLocalClass().get().name,
+			pack: [],
+		});
+
+		final c = macro class {
+			public function equals(rhs:$classType):Bool {
+				return $comparison;
+			}
+		}
+
+		return classFields.concat(c.fields);
 	}
 }

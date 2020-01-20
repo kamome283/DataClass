@@ -3,8 +3,13 @@ using Dataclass;
 class Main {
     static public function main() {
         final p1 = new Person("Tsubasa", 24);
+
         final p2 = p1.copy({name: "Kana"});
         trace(p2.title);
+
+        final p3 = p1.copy({});
+        trace(p1.equals(p3));
+        trace(p1.equals(p2));
     }
 }
 
@@ -12,6 +17,7 @@ class Main {
 @:build(Dataclass.constructor())
 @:build(Dataclass.makePublic())
 @:build(Dataclass.copy())
+@:build(Dataclass.equals())
 class Person {
     final name: String;
     final age: Int;
