@@ -2,7 +2,7 @@ using Dataclass;
 
 class Main {
     static public function main() {
-        final p1 = new Person("Tsubasa", 24);
+        final p1 = Person.init("Tsubasa", 24);
 
         final p2 = p1.copy({name: "Kana"});
         trace(p2.title);
@@ -18,6 +18,7 @@ class Main {
 @:build(Dataclass.makePublic())
 @:build(Dataclass.copy())
 @:build(Dataclass.equals())
+@:build(Dataclass.init())
 class Person {
     final name: String;
     final age: Int;

@@ -30,7 +30,7 @@ class Dataclass {
 		final field:Field = {
 			name: "new",
 			kind: FFun(func),
-			access: [Access.APublic],
+			access: [APrivate],
 			pos: Context.currentPos(),
 		};
 
@@ -141,5 +141,57 @@ class Dataclass {
 		}
 
 		return classFields.concat(c.fields);
+	}
+
+	public static macro function init():Array<Field> {
+		var classFields = Context.getBuildFields();
+		final classTypePath:TypePath = {name: Context.getLocalClass().get().name, pack: []};
+		final classType:ComplexType = TPath(classTypePath);
+
+		final hasInitFunc = classFields.exists(f -> {
+			return switch (f.kind) {
+				case FFun(_) if (f.name == "init"):
+					true;
+				case _ if (f.name == "init"):
+					Context.error('"init" field must be function', Context.currentPos());
+				default:
+					false;
+			}
+		});
+		if (hasInitFunc)
+			return classFields;
+
+		var args:Array<FunctionArg> = [];
+		var params:Array<Expr> = [];
+		for (f in classFields) {
+			switch (f.kind) {
+				case FVar(t, e):
+					args.push({name: f.name, type: t});
+					params.push(macro $i{f.name});
+				default:
+			}
+		}
+
+		final func:Function = {
+			args: args,
+			ret: classType,
+			expr: {
+				expr: EReturn({
+					expr: ENew(classTypePath, params),
+					pos: Context.currentPos()
+				}),
+				pos: Context.currentPos()
+			}
+		};
+
+		final field:Field = {
+			name: "init",
+			kind: FFun(func),
+			access: [APublic, AStatic, AInline],
+			pos: Context.currentPos(),
+		};
+
+		classFields.push(field);
+		return classFields;
 	}
 }
