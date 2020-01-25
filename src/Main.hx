@@ -1,3 +1,5 @@
+using Dataclass;
+
 class Main {
 	static public function main() {
 		// Generates *private* constructor which takes and initializes all class variables.
@@ -31,12 +33,7 @@ class Main {
 }
 
 // All class variables become public automatically.
-@:build(Dataclass.constructor())
-@:build(Dataclass.makePublic())
-@:build(Dataclass.copy())
-@:build(Dataclass.equals())
-@:build(Dataclass.init())
-class Idol {
+class Idol implements DataClass {
 	final name:String;
 	final age:Int;
 	final type:IdolType;

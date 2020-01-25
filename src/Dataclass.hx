@@ -3,7 +3,16 @@ import haxe.macro.Context;
 
 using Lambda;
 
-class Dataclass {
+@:remove
+@:autoBuild(DataClassImpl.constructor())
+@:autoBuild(DataClassImpl.makePublic())
+@:autoBuild(DataClassImpl.copy())
+@:autoBuild(DataClassImpl.equals())
+@:autoBuild(DataClassImpl.init())
+interface DataClass {}
+
+@:remove
+class DataClassImpl {
 	public static macro function constructor():Array<Field> {
 		var fields = Context.getBuildFields();
 		var args:Array<FunctionArg> = [];
