@@ -11,17 +11,18 @@ using Lambda;
 @:autoBuild(DataClassImpl.genInit())
 interface DataClass {}
 
+
 @:remove
 final class DataClassImpl {
 	public static macro function genConstructor():Array<Field> {
-		var fields = Context.getBuildFields();
+		var classFields = Context.getBuildFields();
+
 		var args:Array<FunctionArg> = [];
 		var exprs:Array<Expr> = [];
-
-		for (field in fields) {
-			switch (field.kind) {
+		for (f in classFields) {
+			switch (f.kind) {
 				case FVar(t, e):
-					final name = field.name;
+					final name = f.name;
 					final arg = {name: name, type: t};
 					args.push(arg);
 					final expr = macro this.$name = $i{name};
@@ -43,8 +44,8 @@ final class DataClassImpl {
 			pos: Context.currentPos(),
 		};
 
-		fields.push(field);
-		return fields;
+		classFields.push(field);
+		return classFields;
 	}
 
 	public static macro function makeVarsPublic():Array<Field> {
