@@ -11,9 +11,9 @@ using Lambda;
 @:autoBuild(DataClassImpl.genInit())
 interface DataClass {}
 
-
 @:remove
 final class DataClassImpl {
+	#if macro
 	public static macro function genConstructor():Array<Field> {
 		var classFields = Context.getBuildFields();
 
@@ -23,10 +23,8 @@ final class DataClassImpl {
 			switch (f.kind) {
 				case FVar(t, e):
 					final name = f.name;
-					final arg = {name: name, type: t};
-					args.push(arg);
-					final expr = macro this.$name = $i{name};
-					exprs.push(expr);
+					args.push({name: name, type: t});
+					exprs.push(macro this.$name = $i{name});
 				default:
 			}
 		}
@@ -49,20 +47,26 @@ final class DataClassImpl {
 	}
 
 	public static macro function makeVarsPublic():Array<Field> {
-		var fields = Context.getBuildFields();
-		for (field in fields) {
-			switch (field.kind) {
+		var classFields = Context.getBuildFields();
+
+		for (f in classFields) {
+			switch (f.kind) {
 				case FVar(_):
-					field.access.remove(Access.APrivate);
-					field.access.push(Access.APublic);
+					if (f.access.has(APrivate)) {
+						Context.error('DataClass variables cannot make private.', Context.currentPos());
+					}
+					f.access.push(Access.APublic);
 				default:
 			}
 		}
-		return fields;
+
+		return classFields;
 	}
 
 	public static macro function genCopy():Array<Field> {
 		var classFields = Context.getBuildFields();
+		final classTypePath:TypePath = {name: Context.getLocalClass().get().name, pack: []};
+		final classType:ComplexType = TPath(classTypePath);
 
 		var types:Array<ComplexType> = [];
 		var params:Array<Expr> = [];
@@ -70,7 +74,7 @@ final class DataClassImpl {
 			switch (f.kind) {
 				case FVar(t, e):
 					final name = f.name;
-					var t = ComplexType.TAnonymous([
+					final type = ComplexType.TAnonymous([
 						{
 							name: name,
 							pos: Context.currentPos(),
@@ -84,31 +88,22 @@ final class DataClassImpl {
 							]
 						}
 					]);
-					types.push(t);
+					types.push(type);
 					params.push(macro fields.$name == null ? this.$name : fields.$name);
 				default:
 			}
 		}
 
-		final typepath:TypePath = {
-			var pack = [];
-			final name = Context.getLocalClass().get().name;
-			{name: name, pack: pack}
-		};
-
-		final funcExpr:Expr = {
-			final constructExpr:Expr = {expr: ENew(typepath, params), pos: Context.currentPos()};
-
-			macro {
-				return $constructExpr;
-			}
-		}
-
 		final func:Function = {
 			args: [{name: "fields", type: TIntersection(types)}],
-			ret: TPath(typepath),
-			expr: funcExpr,
-		}
+			ret: classType,
+			expr: {
+				final constructExpr:Expr = {expr: ENew(classTypePath, params), pos: Context.currentPos()};
+				macro {
+					return $constructExpr;
+				}
+			}
+		};
 
 		final field:Field = {
 			name: "copy",
@@ -123,6 +118,8 @@ final class DataClassImpl {
 
 	public static macro function genEquals():Array<Field> {
 		var classFields = Context.getBuildFields();
+		final classTypePath:TypePath = {name: Context.getLocalClass().get().name, pack: []};
+		final classType:ComplexType = TPath(classTypePath);
 
 		final comparison:Expr = {
 			var comparisons:Array<Expr> = [];
@@ -134,22 +131,15 @@ final class DataClassImpl {
 					default:
 				}
 			}
-			final lastComp = comparisons.pop();
-
-			comparisons.fold((comp, acc) -> macro $acc && $comp, lastComp);
+			final firstComp = comparisons.shift();
+			comparisons.fold((comp, acc) -> macro $acc && $comp, firstComp);
 		}
-
-		final classType:ComplexType = TPath({
-			name: Context.getLocalClass().get().name,
-			pack: [],
-		});
 
 		final c = macro class {
 			public function equals(rhs:$classType):Bool {
 				return $comparison;
 			}
 		}
-
 		return classFields.concat(c.fields);
 	}
 
@@ -204,4 +194,5 @@ final class DataClassImpl {
 		classFields.push(field);
 		return classFields;
 	}
+	#end
 }
