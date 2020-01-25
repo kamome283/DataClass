@@ -1,4 +1,4 @@
-using Dataclass;
+using DataClass;
 
 class Main {
 	static public function main() {

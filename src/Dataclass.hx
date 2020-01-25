@@ -4,16 +4,16 @@ import haxe.macro.Context;
 using Lambda;
 
 @:remove
-@:autoBuild(DataClassImpl.constructor())
-@:autoBuild(DataClassImpl.makePublic())
-@:autoBuild(DataClassImpl.copy())
-@:autoBuild(DataClassImpl.equals())
-@:autoBuild(DataClassImpl.init())
+@:autoBuild(DataClassImpl.genConstructor())
+@:autoBuild(DataClassImpl.makeVarsPublic())
+@:autoBuild(DataClassImpl.genCopy())
+@:autoBuild(DataClassImpl.genEquals())
+@:autoBuild(DataClassImpl.genInit())
 interface DataClass {}
 
 @:remove
-class DataClassImpl {
-	public static macro function constructor():Array<Field> {
+final class DataClassImpl {
+	public static macro function genConstructor():Array<Field> {
 		var fields = Context.getBuildFields();
 		var args:Array<FunctionArg> = [];
 		var exprs:Array<Expr> = [];
@@ -47,7 +47,7 @@ class DataClassImpl {
 		return fields;
 	}
 
-	public static macro function makePublic():Array<Field> {
+	public static macro function makeVarsPublic():Array<Field> {
 		var fields = Context.getBuildFields();
 		for (field in fields) {
 			switch (field.kind) {
@@ -60,7 +60,7 @@ class DataClassImpl {
 		return fields;
 	}
 
-	public static macro function copy():Array<Field> {
+	public static macro function genCopy():Array<Field> {
 		var classFields = Context.getBuildFields();
 
 		var types:Array<ComplexType> = [];
@@ -120,7 +120,7 @@ class DataClassImpl {
 		return classFields;
 	}
 
-	public static macro function equals():Array<Field> {
+	public static macro function genEquals():Array<Field> {
 		var classFields = Context.getBuildFields();
 
 		final comparison:Expr = {
@@ -152,7 +152,7 @@ class DataClassImpl {
 		return classFields.concat(c.fields);
 	}
 
-	public static macro function init():Array<Field> {
+	public static macro function genInit():Array<Field> {
 		var classFields = Context.getBuildFields();
 		final classTypePath:TypePath = {name: Context.getLocalClass().get().name, pack: []};
 		final classType:ComplexType = TPath(classTypePath);
